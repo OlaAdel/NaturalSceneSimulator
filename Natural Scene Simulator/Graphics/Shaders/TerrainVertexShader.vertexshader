@@ -1,0 +1,26 @@
+#version 330 core
+
+
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec3 vertexColor;
+layout(location = 2) in vec2 texCoord;
+
+
+uniform mat4 model;
+uniform mat4 projection;
+uniform mat4 view;
+
+out vec2 TexCoord;
+out vec3 normal_worldspace;
+out vec3 position_worldspace;
+out vec3 position;
+void main(){
+
+	position = vertexPosition_modelspace;
+	gl_Position =  projection*view*model * vec4(vertexPosition_modelspace,1);
+	TexCoord = texCoord;
+	position_worldspace = vec3(model * vec4(vertexPosition_modelspace,1));
+	normal_worldspace = normalize(vec3(model * vec4(vec3(0,1,0),0)));
+}	
+
+

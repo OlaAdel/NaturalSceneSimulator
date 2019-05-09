@@ -1,0 +1,80 @@
+#version 330 core
+uniform sampler2D Sand;
+uniform sampler2D Rock;
+uniform sampler2D Grass;
+uniform sampler2D Ice;
+
+
+out vec3 color;
+in vec2 TexCoord;
+in vec3 position;
+
+
+in vec3 position_worldspace;
+in vec3 normal_worldspace;
+uniform vec3 LightPosition_worldspace;
+uniform vec3 EyePosition_worldspace;
+uniform vec3 ambientLight;
+uniform vec2 data;
+
+void main()
+{	
+	 float value = clamp(position.y, -850000, -150000);
+	 float per = ( value - (-150000) ) / ( -850000 -(-150000) );
+	const float range0 = 0.05;
+	const float range1 = 0.3;
+    const float range2 = 0.5;
+    const float range3 = 1.0;
+	vec3 SandTexture = texture(Sand, TexCoord ).rgb;
+	vec3 GrassTexture = texture(Grass, TexCoord ).rgb;
+	vec3 RockTexture = texture(Rock, TexCoord ).rgb;
+	vec3 IceTexture = texture(Ice, TexCoord ).rgb;
+   
+	vec3 textureColor;
+	if(per < range1)
+        textureColor = mix(IceTexture,RockTexture , (per - range0) / (range1 - range0) );
+    else if(per < range2) 
+        textureColor = mix( RockTexture,GrassTexture , (per - range1) / (range2 - range1) );
+    else 
+        textureColor = mix( GrassTexture,SandTexture , (per - range2) / (range3 - range2) );
+
+	 vec3 Il = vec3(1,1,0);
+
+	vec3 lightVector = normalize(LightPosition_worldspace - position_worldspace);
+
+
+	float brightness = dot(lightVector,normal_worldspace);
+	vec3 diffuseLight = vec3(brightness,brightness,brightness);
+	diffuseLight = Il*clamp(diffuseLight,0,1);
+
+	//Specular light calculations.
+	vec3 reflectedLightVector = reflect(-lightVector,normal_worldspace);
+	vec3 eyeDirectionVector = normalize(EyePosition_worldspace - position_worldspace);
+	float specularity = dot(reflectedLightVector,eyeDirectionVector);
+	float specularExponent = data.y;
+	specularity = pow(specularity,specularExponent);
+	vec3 specularLight = vec3(specularity,specularity,specularity);
+	specularLight = Il*clamp(specularLight,0,1);
+
+
+	
+
+	float d = abs(distance(position_worldspace,LightPosition_worldspace));
+	float r = data.x;
+	float att = 1 - (d/r);
+	if ( att < 0)
+		att = 0;
+	color = ambientLight + (diffuseLight + specularLight)*att;
+
+	color = color*textureColor;
+
+
+
+
+
+
+
+
+
+
+}
